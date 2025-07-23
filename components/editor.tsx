@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { updatePost, updatePostMetadata } from "@/lib/actions";
-// import { Editor as NovelEditor } from "novel"; // Temporalmente comentado por error de build
+import { Editor as NovelEditor } from "novel";
 import TextareaAutosize from "react-textarea-autosize";
 import { cn } from "@/lib/utils";
 import LoadingDots from "./icons/loading-dots";
@@ -37,6 +37,11 @@ export default function Editor({ post }: { post: PostWithSite }) {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [data, startTransitionSaving]);
+
+  // Set up hydration
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   return (
     <div className="relative min-h-[500px] w-full max-w-screen-lg border-stone-200 p-12 px-8 sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:px-12 sm:shadow-lg dark:border-stone-700">
@@ -103,13 +108,32 @@ export default function Editor({ post }: { post: PostWithSite }) {
           className="dark:placeholder-text-600 w-full resize-none border-none px-0 placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
         />
       </div>
-      <div className="p-4 border rounded-lg bg-gray-50">
-        <p className="text-gray-600">
-          Editor temporalmente deshabilitado por actualizaciones.
-          <br />
-          Contenido actual: {post.content ? 'Hay contenido guardado' : 'Sin contenido'}
-        </p>
-      </div>
+      {hydrated && (
+        <NovelEditor
+          className="relative min-h-[500px] w-full max-w-screen-lg bg-white sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:border-stone-200 sm:shadow-lg"
+          defaultValue={post?.content || ""}
+          disableLocalStorage={true}
+          onUpdate={(editor) => {
+            const content = editor?.getHTML();
+            setData((prev) => ({
+              ...prev,
+              content: content || "",
+            }));
+          }}
+          onDebouncedUpdate={(editor) => {
+            const content = editor?.getHTML();
+            if (content !== post?.content) {
+              startTransitionSaving(async () => {
+                await updatePost({
+                  ...data,
+                  content: content || "",
+                });
+              });
+            }
+          }}
+          completionApi="/api/generate"
+        />
+      )}
     </div>
   );
 }
