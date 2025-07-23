@@ -1,9 +1,8 @@
-/* eslint-disable @next/next/no-img-element */
 // @ts-nocheck
+/* eslint-disable @next/next/no-img-element */
 
-import { truncate } from "@/lib/utils";
 import { ImageResponse } from "next/og";
-import { sql } from "@vercel/postgres";
+import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
@@ -12,66 +11,156 @@ export default async function PostOG({
 }: {
   params: { domain: string; slug: string };
 }) {
-  const domain = decodeURIComponent(params.domain);
-  const slug = decodeURIComponent(params.slug);
+  try {
+    const domain = decodeURIComponent(params.domain);
+    const slug = decodeURIComponent(params.slug);
 
-  const subdomain = domain.endsWith(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`)
-    ? domain.replace(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`, "")
-    : null;
+    // Verificar variables de entorno
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+    if (!rootDomain) {
+      return new Response("Configuration error", { status: 500 });
+    }
 
-  const response = await sql`
-  SELECT post.title, post.description, post.image, "user".name as "authorName", "user".image as "authorImage"
-  FROM "Post" AS post 
-  INNER JOIN "Site" AS site ON post."siteId" = site.id 
-  INNER JOIN "User" AS "user" ON site."userId" = "user".id 
-  WHERE 
-    (
-        site.subdomain = ${subdomain}
-        OR site."customDomain" = ${domain}
-    )
-    AND post.slug = ${slug}
-  LIMIT 1;
-`;
+    const subdomain = domain.endsWith(`.${rootDomain}`)
+      ? domain.replace(`.${rootDomain}`, "")
+      : null;
 
-  const data = response.rows[0];
+    // Usar fetch directo en lugar de sql template para evitar problemas
+    const response = await fetch(
+      `${process.env.NEXTAUTH_URL || 'https://' + domain}/api/og-data?domain=${encodeURIComponent(domain)}&slug=${encodeURIComponent(slug)}`,
+      { cache: 'no-store' }
+    );
 
-  if (!data) {
-    return new Response("Not found", { status: 404 });
-  }
+    let data = {
+      title: "Blog Post",
+      description: "A blog post description",
+      authorName: "Author",
+      authorImage: "https://avatar.vercel.sh/author",
+      image: "https://illustrations.popsy.co/gray/success.svg"
+    };
 
-  // Removed custom font loading to fix Vercel deployment issue
-  // The font will use the default system font instead
-  
-  return new ImageResponse(
-    (
-      <div tw="flex flex-col items-center w-full h-full bg-white">
-        <div tw="flex flex-col items-center justify-center mt-8">
-          <h1 tw="text-6xl font-bold text-gray-900 leading-none tracking-tight">
-            {data.title}
-          </h1>
-          <p tw="mt-4 text-xl text-gray-600 max-w-xl text-center">
-            {truncate(data.description, 120)}
-          </p>
-          <div tw="flex items-center justify-center">
-            <img
-              tw="w-12 h-12 rounded-full mr-4"
-              src={data.authorImage}
-              alt={data.authorName}
-            />
-            <p tw="text-xl font-medium text-gray-900">by {data.authorName}</p>
+    if (response.ok) {
+      try {
+        const fetchedData = await response.json();
+        data = { ...data, ...fetchedData };
+      } catch (e) {
+        console.error("Error parsing OG data:", e);
+      }
+    }
+
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'white',
+            padding: '40px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: '32px',
+            }}
+          >
+            <h1
+              style={{
+                fontSize: '48px',
+                fontWeight: 'bold',
+                color: '#111827',
+                lineHeight: '1',
+                textAlign: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              {data.title}
+            </h1>
+            <p
+              style={{
+                fontSize: '18px',
+                color: '#6B7280',
+                maxWidth: '600px',
+                textAlign: 'center',
+                marginBottom: '24px',
+              }}
+            >
+              {data.description?.slice(0, 120)}
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '24px',
+              }}
+            >
+              <img
+                src={data.authorImage}
+                alt={data.authorName}
+                width="48"
+                height="48"
+                style={{
+                  borderRadius: '50%',
+                  marginRight: '16px',
+                }}
+              />
+              <p
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '500',
+                  color: '#111827',
+                }}
+              >
+                by {data.authorName}
+              </p>
+            </div>
           </div>
-          <img
-            tw="mt-4 w-5/6 rounded-2xl border border-gray-200 shadow-md"
-            src={data.image}
-            alt={data.title}
-          />
         </div>
-      </div>
-    ),
-    {
-      width: 1200,
-      height: 600,
-      emoji: "blobmoji",
-    },
-  );
+      ),
+      {
+        width: 1200,
+        height: 600,
+        emoji: "blobmoji",
+      },
+    );
+  } catch (error) {
+    console.error("OpenGraph image generation error:", error);
+    
+    // Fallback simple
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'white',
+          }}
+        >
+          <h1
+            style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              color: '#111827',
+            }}
+          >
+            Blog Post
+          </h1>
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 600,
+      },
+    );
+  }
 }

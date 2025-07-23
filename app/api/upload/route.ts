@@ -2,10 +2,18 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { nanoid } from "nanoid";
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
+// Cambiar a nodejs runtime para compatibilidad con Supabase
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    // Verificar si Supabase está configurado
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY === 'dummy-service-key') {
+      return new Response("Supabase not configured", {
+        status: 500
+      });
+    }
+
     const file = await req.arrayBuffer();
     const contentType = req.headers.get("content-type") || "application/octet-stream";
 

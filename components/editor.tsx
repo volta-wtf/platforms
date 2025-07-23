@@ -2,10 +2,6 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { updatePost, updatePostMetadata } from "@/lib/actions";
-// ===========================================
-// EDITOR NOVEL (TEMPORALMENTE DESHABILITADO)
-// ===========================================
-// import { Editor as NovelEditor } from "novel"; // Deshabilitado por error: '__serializeForClipboard' not exported
 import TextareaAutosize from "react-textarea-autosize";
 import { cn } from "@/lib/utils";
 import LoadingDots from "./icons/loading-dots";
@@ -104,63 +100,29 @@ export default function Editor({ post }: { post: PostWithSite }) {
           onChange={(e) => setData({ ...data, title: e.target.value })}
           className="dark:placeholder-text-600 border-none px-0 font-cal text-3xl placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
         />
-        {/*
         <TextareaAutosize
           placeholder="Description"
           defaultValue={post?.description || ""}
           onChange={(e) => setData({ ...data, description: e.target.value })}
           className="dark:placeholder-text-600 w-full resize-none border-none px-0 placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
         />
-        */}
       </div>
 
-      {/* ========================================= */}
-      {/* EDITOR CONTENT AREA */}
-      {/* ========================================= */}
       {hydrated && (
-        <>
-          {/* ========================================= */}
-          {/* OPCIÓN A: NOVEL EDITOR (DESHABILITADO) */}
-          {/* ========================================= */}
-          {/*
-          <NovelEditor
-            className="relative min-h-[500px] w-full max-w-screen-lg bg-white sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:border-stone-200 sm:shadow-lg"
+        <div className="relative min-h-[500px] w-full">
+          <TextareaAutosize
+            placeholder="Write your content here..."
             defaultValue={post?.content || ""}
-            disableLocalStorage={true}
-            onUpdate={(editor) => {
-              const content = editor?.getHTML();
-              setData((prev) => ({
-                ...prev,
-                content: content || "",
-              }));
-            }}
-            onDebouncedUpdate={(editor) => {
-              const content = editor?.getHTML();
-              if (content !== post?.content) {
-                startTransitionSaving(async () => {
-                  await updatePost({
-                    ...data,
-                    content: content || "",
-                  });
-                });
-              }
-            }}
-            completionApi="/api/generate"
+            onChange={(e) => setData({ ...data, content: e.target.value })}
+            className="dark:placeholder-text-600 w-full resize-none border-none px-0 text-lg placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
+            minRows={20}
           />
-          */}
-
-          {/* ========================================= */}
-          {/* OPCIÓN B: TEXTAREA SIMPLE (TEMPORAL) */}
-          {/* ========================================= */}
-          <div className="relative min-h-[500px] w-full">
-            <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
-              <p className="text-yellow-800 text-sm">
-                ⚠️ Editor temporalmente simplificado debido a problemas de compatibilidad con Novel.
-                Se restaurará el editor completo cuando se resuelva el conflicto de &apos;__serializeForClipboard&apos;.
-              </p>
-            </div>
+          <div className="mt-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
+            <p className="text-blue-800 text-sm">
+              💡 Editor simplificado para máxima compatibilidad. Soporta Markdown básico.
+            </p>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

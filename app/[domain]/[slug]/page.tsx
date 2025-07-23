@@ -51,6 +51,8 @@ export async function generateMetadata({
   };
 }
 
+// Comentado para evitar errores de build sin base de datos
+/*
 export async function generateStaticParams() {
   const allPosts = await db
     .select({
@@ -79,6 +81,7 @@ export async function generateStaticParams() {
 
   return allPaths;
 }
+*/
 
 export default async function SitePostPage({
   params,

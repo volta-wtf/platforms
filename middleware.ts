@@ -14,56 +14,71 @@ export const config = {
 };
 
 export default async function middleware(req: NextRequest) {
-  const url = req.nextUrl;
+  try {
+    const url = req.nextUrl;
 
-  // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
-  let hostname = req.headers.get("host")!;
+    // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
+    let hostname = req.headers.get("host");
+    
+    if (!hostname) {
+      return NextResponse.next();
+    }
 
-  // Only replace localhost in development
-  if (hostname.includes("localhost:3000")) {
-    hostname = hostname.replace(".localhost:3000", `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`);
-  }
+    // Only replace localhost in development
+    if (hostname.includes("localhost:3000")) {
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+      if (rootDomain) {
+        hostname = hostname.replace(".localhost:3000", `.${rootDomain}`);
+      }
+    }
 
-  // special case for Vercel preview deployment URLs
-  if (
-    hostname.includes("---") &&
-    hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)
-  ) {
-    hostname = `${hostname.split("---")[0]}.${
-      process.env.NEXT_PUBLIC_ROOT_DOMAIN
+    // special case for Vercel preview deployment URLs
+    if (
+      hostname.includes("---") &&
+      process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX &&
+      hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)
+    ) {
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+      if (rootDomain) {
+        hostname = `${hostname.split("---")[0]}.${rootDomain}`;
+      }
+    }
+
+    const searchParams = req.nextUrl.searchParams.toString();
+    // Get the pathname of the request (e.g. /, /about, /blog/first-post)
+    const path = `${url.pathname}${
+      searchParams.length > 0 ? `?${searchParams}` : ""
     }`;
+
+    // rewrites for app pages
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+    if (rootDomain && hostname === `app.${rootDomain}`) {
+      return NextResponse.rewrite(
+        new URL(`/app${path === "/" ? "" : path}`, req.url),
+      );
+    }
+
+    // special case for `vercel.pub` domain
+    if (hostname === "vercel.pub") {
+      return NextResponse.redirect(
+        "https://vercel.com/blog/platforms-starter-kit",
+      );
+    }
+
+    // rewrite root application to `/home` folder
+    if (
+      hostname === "localhost:3000" ||
+      (rootDomain && hostname === rootDomain)
+    ) {
+      return NextResponse.rewrite(
+        new URL(`/home${path === "/" ? "" : path}`, req.url),
+      );
+    }
+
+    // rewrite everything else to `/[domain]/[slug] dynamic route
+    return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
+  } catch (error) {
+    console.error("Middleware error:", error);
+    return NextResponse.next();
   }
-
-  const searchParams = req.nextUrl.searchParams.toString();
-  // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
-
-  // rewrites for app pages - Simplified auth check
-  if (hostname == `app.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
-    return NextResponse.rewrite(
-      new URL(`/app${path === "/" ? "" : path}`, req.url),
-    );
-  }
-
-  // special case for `vercel.pub` domain
-  if (hostname === "vercel.pub") {
-    return NextResponse.redirect(
-      "https://vercel.com/blog/platforms-starter-kit",
-    );
-  }
-
-  // rewrite root application to `/home` folder
-  if (
-    hostname === "localhost:3000" ||
-    hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN
-  ) {
-    return NextResponse.rewrite(
-      new URL(`/home${path === "/" ? "" : path}`, req.url),
-    );
-  }
-
-  // rewrite everything else to `/[domain]/[slug] dynamic route
-  return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
 }

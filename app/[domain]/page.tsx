@@ -10,6 +10,8 @@ import Image from "next/image";
 export const dynamic = 'force-dynamic';
 import db from "@/lib/db";
 
+// Comentado para evitar errores de build sin base de datos
+/*
 export async function generateStaticParams() {
   const allSites = await db.query.sites.findMany({
     // feel free to remove this filter if you want to generate paths for all sites
@@ -33,6 +35,7 @@ export async function generateStaticParams() {
 
   return allPaths;
 }
+*/
 
 export default async function SiteHomePage({
   params,
