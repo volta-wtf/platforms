@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-// Temporarily remove next-auth/jwt import to fix __dirname issue
-// import { getToken } from "next-auth/jwt";
 
 export const config = {
   matcher: [
@@ -13,6 +11,7 @@ export const config = {
      */
     "/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)",
   ],
+  runtime: 'experimental-edge',
 };
 
 export default async function middleware(req: NextRequest) {
@@ -44,26 +43,6 @@ export default async function middleware(req: NextRequest) {
 
   // rewrites for app pages - Simplified auth check
   if (hostname == `app.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
-    // Temporarily disable auth check to isolate __dirname issue
-    // TODO: Re-enable auth when __dirname issue is resolved
-    /*
-    try {
-      const session = await getToken({
-        req,
-        secret: process.env.NEXTAUTH_SECRET
-      });
-      if (!session && path !== "/login") {
-        return NextResponse.redirect(new URL("/login", req.url));
-      } else if (session && path == "/login") {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-    } catch (error) {
-      console.error("Middleware auth error:", error);
-      if (path !== "/login") {
-        return NextResponse.redirect(new URL("/login", req.url));
-      }
-    }
-    */
     return NextResponse.rewrite(
       new URL(`/app${path === "/" ? "" : path}`, req.url),
     );
