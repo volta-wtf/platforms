@@ -10,9 +10,9 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "NODE_TLS_REJECT_UNAUTHORIZED=0 npx dotenv-cli -e .env.local -- npx drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "setup": "node setup.js",
+    "setup": "node scripts/setup.js",
     "deploy": "vercel --prod",
-    "check-env": "node check-config.js",
+    "check-env": "node scripts/check-config.js",
     "complete-setup": "pnpm run check-env && pnpm run db:push && echo '🎉 ¡Configuración completada! Ejecuta: pnpm dev'"
   },
   "dependencies": {
