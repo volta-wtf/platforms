@@ -2,7 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { updatePost, updatePostMetadata } from "@/lib/actions";
-import { Editor as NovelEditor } from "novel";
+// ===========================================
+// EDITOR NOVEL (TEMPORALMENTE DESHABILITADO)
+// ===========================================
+// import { Editor as NovelEditor } from "novel"; // Deshabilitado por error: '__serializeForClipboard' not exported
 import TextareaAutosize from "react-textarea-autosize";
 import { cn } from "@/lib/utils";
 import LoadingDots from "./icons/loading-dots";
@@ -108,31 +111,82 @@ export default function Editor({ post }: { post: PostWithSite }) {
           className="dark:placeholder-text-600 w-full resize-none border-none px-0 placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
         />
       </div>
+
+      {/* ========================================= */}
+      {/* EDITOR CONTENT AREA */}
+      {/* ========================================= */}
       {hydrated && (
-        <NovelEditor
-          className="relative min-h-[500px] w-full max-w-screen-lg bg-white sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:border-stone-200 sm:shadow-lg"
-          defaultValue={post?.content || ""}
-          disableLocalStorage={true}
-          onUpdate={(editor) => {
-            const content = editor?.getHTML();
-            setData((prev) => ({
-              ...prev,
-              content: content || "",
-            }));
-          }}
-          onDebouncedUpdate={(editor) => {
-            const content = editor?.getHTML();
-            if (content !== post?.content) {
-              startTransitionSaving(async () => {
-                await updatePost({
-                  ...data,
-                  content: content || "",
+        <>
+          {/* ========================================= */}
+          {/* OPCIÓN A: NOVEL EDITOR (DESHABILITADO) */}
+          {/* ========================================= */}
+          {/*
+          <NovelEditor
+            className="relative min-h-[500px] w-full max-w-screen-lg bg-white sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:border-stone-200 sm:shadow-lg"
+            defaultValue={post?.content || ""}
+            disableLocalStorage={true}
+            onUpdate={(editor) => {
+              const content = editor?.getHTML();
+              setData((prev) => ({
+                ...prev,
+                content: content || "",
+              }));
+            }}
+            onDebouncedUpdate={(editor) => {
+              const content = editor?.getHTML();
+              if (content !== post?.content) {
+                startTransitionSaving(async () => {
+                  await updatePost({
+                    ...data,
+                    content: content || "",
+                  });
                 });
-              });
-            }
-          }}
-          completionApi="/api/generate"
-        />
+              }
+            }}
+            completionApi="/api/generate"
+          />
+          */}
+
+          {/* ========================================= */}
+          {/* OPCIÓN B: TEXTAREA SIMPLE (TEMPORAL) */}
+          {/* ========================================= */}
+          <div className="relative min-h-[500px] w-full">
+            <div className="mb-4 rounded-lg bg-yellow-50 border border-yellow-200 p-4">
+              <p className="text-yellow-800 text-sm">
+                ⚠️ Editor temporalmente simplificado debido a problemas de compatibilidad con Novel.
+                Se restaurará el editor completo cuando se resuelva el conflicto de '__serializeForClipboard'.
+              </p>
+            </div>
+            <TextareaAutosize
+              placeholder="Escribe el contenido de tu post aquí... Soporta Markdown!"
+              defaultValue={post?.content || ""}
+              onChange={(e) => {
+                const content = e.target.value;
+                setData((prev) => ({
+                  ...prev,
+                  content: content || "",
+                }));
+
+                // Auto-save después de 2 segundos de inactividad
+                clearTimeout((window as any).autoSaveTimeout);
+                (window as any).autoSaveTimeout = setTimeout(() => {
+                  if (content !== post?.content) {
+                    startTransitionSaving(async () => {
+                      await updatePost({
+                        ...data,
+                        content: content || "",
+                      });
+                    });
+                  }
+                }, 2000);
+              }}
+              className="w-full min-h-[400px] p-4 border border-stone-200 rounded-lg focus:border-stone-400 focus:outline-none dark:bg-black dark:text-white dark:border-stone-700 resize-none"
+            />
+            <div className="mt-2 text-xs text-stone-500">
+              💡 Soporte para Markdown • Auto-save cada 2 segundos • CMD+S para guardar manual
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
