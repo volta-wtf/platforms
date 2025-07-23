@@ -7,7 +7,7 @@ import {
   validDomainRegex,
 } from "@/lib/domains";
 import { getBlurDataURL } from "@/lib/utils";
-import { put } from "@vercel/blob";
+import { supabaseAdmin } from "@/lib/supabase";
 import { eq } from "drizzle-orm";
 import { customAlphabet } from "nanoid";
 import { revalidateTag } from "next/cache";
@@ -19,6 +19,31 @@ const nanoid = customAlphabet(
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
   7,
 ); // 7-character random string
+
+// Helper function para upload a Supabase Storage
+async function uploadToSupabase(file: File): Promise<string> {
+  const fileExtension = file.type.split("/")[1] || "bin";
+  const filename = `${nanoid()}.${fileExtension}`;
+  const filePath = `uploads/${filename}`;
+
+  const { data, error } = await supabaseAdmin.storage
+    .from('uploads')
+    .upload(filePath, file, {
+      contentType: file.type,
+      upsert: false
+    });
+
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`);
+  }
+
+  // Obtener URL pública del archivo
+  const { data: publicUrlData } = supabaseAdmin.storage
+    .from('uploads')
+    .getPublicUrl(filePath);
+
+  return publicUrlData.publicUrl;
+}
 
 export const createSite = async (formData: FormData) => {
   const session = await getSession();
@@ -127,13 +152,6 @@ export const updateSite = withSiteAuth(
           */
         }
       } else if (key === "image" || key === "logo") {
-        // Temporalmente deshabilitado para deployment
-        return {
-          error:
-            "Upload de imágenes temporalmente deshabilitado. Configura BLOB_READ_WRITE_TOKEN o migra a Supabase Storage.",
-        };
-
-        /*
         if (!process.env.BLOB_READ_WRITE_TOKEN) {
           return {
             error:
@@ -144,9 +162,7 @@ export const updateSite = withSiteAuth(
         const file = formData.get(key) as File;
         const filename = `${nanoid()}.${file.type.split("/")[1]}`;
 
-        const { url } = await put(filename, file, {
-          access: "public",
-        });
+        const url = await uploadToSupabase(file);
 
         const blurhash = key === "image" ? await getBlurDataURL(url) : null;
 
@@ -159,7 +175,6 @@ export const updateSite = withSiteAuth(
           .where(eq(sites.id, site.id))
           .returning()
           .then((res) => res[0]);
-        */
       } else {
         response = await db
           .update(sites)
@@ -320,18 +335,10 @@ export const updatePostMetadata = withPostAuth(
     try {
       let response;
       if (key === "image") {
-        // Temporalmente deshabilitado para deployment
-        return {
-          error: "Upload de imágenes temporalmente deshabilitado. Configura BLOB_READ_WRITE_TOKEN o migra a Supabase Storage.",
-        };
-
-        /*
         const file = formData.get("image") as File;
         const filename = `${nanoid()}.${file.type.split("/")[1]}`;
 
-        const { url } = await put(filename, file, {
-          access: "public",
-        });
+        const url = await uploadToSupabase(file);
 
         const blurhash = await getBlurDataURL(url);
         response = await db
@@ -343,7 +350,6 @@ export const updatePostMetadata = withPostAuth(
           .where(eq(posts.id, post.id))
           .returning()
           .then((res) => res[0]);
-        */
       } else {
         response = await db
           .update(posts)

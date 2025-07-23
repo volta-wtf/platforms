@@ -18,6 +18,9 @@ module.exports = {
       { hostname: "www.google.com" },
       { hostname: "flag.vercel.app" },
       { hostname: "illustrations.popsy.co" },
+      // Supabase Storage
+      { hostname: "rmextyvlfwggwkbcfmbv.supabase.co" },
+      { hostname: "*.supabase.co" },
     ],
   },
 };
