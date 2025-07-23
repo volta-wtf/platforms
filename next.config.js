@@ -21,6 +21,9 @@ module.exports = {
       // Supabase Storage
       { hostname: "rmextyvlfwggwkbcfmbv.supabase.co" },
       { hostname: "*.supabase.co" },
+      // Localhost para desarrollo
+      { hostname: "localhost" },
+      { hostname: "app.localhost" },
     ],
   },
 };
