@@ -11,7 +11,6 @@ export const config = {
      */
     "/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)",
   ],
-  runtime: 'experimental-edge',
 };
 
 export default async function middleware(req: NextRequest) {
