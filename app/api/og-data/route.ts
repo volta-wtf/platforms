@@ -3,6 +3,8 @@ import db from "@/lib/db";
 import { posts, sites, users } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
       .innerJoin(users, eq(sites.userId, users.id))
       .where(
         and(
-          subdomain 
+          subdomain
             ? eq(sites.subdomain, subdomain)
             : eq(sites.customDomain, domain),
           eq(posts.slug, slug)
@@ -61,4 +63,4 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching OG data:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+}
