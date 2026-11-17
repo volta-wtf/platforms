@@ -7,9 +7,25 @@ export const config = {
 };
 
 export default function middleware(req: NextRequest) {
-  // Middleware temporal ultra-básico para debugging
-  console.log("Middleware called for:", req.url);
-  
-  // Por ahora, solo pasar todo sin procesar
-  return NextResponse.next();
+  const hostname = req.headers.get("host");
+
+  if (!hostname) {
+    return NextResponse.next();
+  }
+
+  if (hostname.includes("app.")) {
+    return NextResponse.rewrite(
+      new URL(`/app${req.nextUrl.pathname}`, req.url),
+    );
+  }
+
+  if (hostname === "localhost:3000") {
+    return NextResponse.rewrite(
+      new URL(`/home${req.nextUrl.pathname}`, req.url),
+    );
+  }
+
+  return NextResponse.rewrite(
+    new URL(`/${hostname}${req.nextUrl.pathname}`, req.url),
+  );
 }

@@ -152,10 +152,13 @@ export const updateSite = withSiteAuth(
           */
         }
       } else if (key === "image" || key === "logo") {
-        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        if (
+          !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+          process.env.SUPABASE_SERVICE_ROLE_KEY === "dummy-service-key"
+        ) {
           return {
             error:
-              "Missing BLOB_READ_WRITE_TOKEN token. Note: Vercel Blob is currently in beta – please fill out this form for access: https://tally.so/r/nPDMNd",
+              "Missing SUPABASE_SERVICE_ROLE_KEY. Configura la clave de servicio de Supabase en tu .env.local para subir imágenes.",
           };
         }
 
