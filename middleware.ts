@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+// Avoid loading next/server's user-agent parser into this edge bundle.
+import { NextResponse } from "next/dist/server/web/spec-extension/response";
 
 export const config = {
   matcher: [
