@@ -10,6 +10,7 @@ export const config = {
 
 export default function middleware(req: NextRequest) {
   const hostname = req.headers.get("host");
+  const pathname = new URL(req.url).pathname;
 
   if (!hostname) {
     return NextResponse.next();
@@ -17,17 +18,17 @@ export default function middleware(req: NextRequest) {
 
   if (hostname.includes("app.")) {
     return NextResponse.rewrite(
-      new URL(`/app${req.nextUrl.pathname}`, req.url),
+      new URL(`/app${pathname}`, req.url),
     );
   }
 
   if (hostname === "localhost:3000") {
     return NextResponse.rewrite(
-      new URL(`/home${req.nextUrl.pathname}`, req.url),
+      new URL(`/home${pathname}`, req.url),
     );
   }
 
   return NextResponse.rewrite(
-    new URL(`/${hostname}${req.nextUrl.pathname}`, req.url),
+    new URL(`/${hostname}${pathname}`, req.url),
   );
 }
