@@ -11,6 +11,8 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: process.env.AUTH_GITHUB_ID as string,
       clientSecret: process.env.AUTH_GITHUB_SECRET as string,
+      // GitHub now includes RFC 9207's `iss` in OAuth callbacks.
+      issuer: "https://github.com/login/oauth",
       profile(profile) {
         return {
           id: profile.id.toString(),
