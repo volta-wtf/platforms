@@ -18,14 +18,15 @@ Esta es una plataforma multi-tenant para blogs/sitios con subdominios personaliz
 cp .env.example .env.local
 ```
 
-### 2. Configurar GitHub OAuth
+### 2. Configurar el inicio de sesión con GitHub
 
-1. Ve a [GitHub Settings > Developer settings > OAuth Apps](https://github.com/settings/applications/new)
-2. Crea una nueva OAuth App con:
-   - **Application name**: Tu aplicación
-   - **Homepage URL**: `http://localhost:3000` (desarrollo) / `https://tudominio.com` (producción)
-   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
-3. Copia el **Client ID** y **Client Secret** al `.env.local`
+La app usa un **GitHub App** para admitir varios callbacks.
+
+1. Ve a [GitHub Developer Settings > GitHub Apps](https://github.com/settings/apps) y abre la app.
+2. En la configuración de autorización de usuario, habilita OAuth y registra estas Callback URLs:
+   - Desarrollo: `http://localhost:3000/api/auth/callback/github`
+   - Producción: `https://platforms-volta.vercel.app/api/auth/callback/github`
+3. Copia el **Client ID** y el **Client Secret** en `AUTH_GITHUB_ID` y `AUTH_GITHUB_SECRET`.
 
 ### 3. Configurar Base de Datos PostgreSQL en Vercel
 
@@ -109,8 +110,8 @@ vercel --prod
 En el Dashboard de Vercel, ve a Settings > Environment Variables y agrega:
 
 **Variables de Producción:**
-- `NEXTAUTH_URL`: https://tudominio.com
-- `NEXT_PUBLIC_ROOT_DOMAIN`: tudominio.com
+- `NEXTAUTH_URL`: https://platforms-volta.vercel.app
+- `NEXT_PUBLIC_ROOT_DOMAIN`: platforms-volta.vercel.app
 - `NEXT_PUBLIC_VERCEL_ENV`: production
 - Todas las demás variables del `.env.local`
 
@@ -139,7 +140,8 @@ En el Dashboard de Vercel, ve a Settings > Environment Variables y agrega:
 
 ### Error de autenticación
 - Verifica `AUTH_GITHUB_ID` y `AUTH_GITHUB_SECRET`
-- Asegúrate de que el callback URL de GitHub coincida
+- Confirma que el GitHub App tenga registrados los callbacks local y de producción
+- En producción, `NEXTAUTH_URL` y `NEXT_PUBLIC_ROOT_DOMAIN` deben usar el dominio activo
 
 ### Error de almacenamiento
 - Verifica `BLOB_READ_WRITE_TOKEN`
@@ -157,5 +159,5 @@ Si encuentras problemas, revisa:
 
 Tu plataforma debería estar funcionando en:
 - **Desarrollo**: http://localhost:3000
-- **App Dashboard**: http://app.localhost:3000 (desarrollo) / https://app.tudominio.com (producción)
+- **Admin**: http://localhost:3000/admin (desarrollo) / https://platforms-volta.vercel.app/admin (producción)
 - **Sitios de usuarios**: http://usuario.localhost:3000 (desarrollo) / https://usuario.tudominio.com (producción)

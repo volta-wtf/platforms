@@ -127,7 +127,7 @@ export default function Nav({ children }: { children: ReactNode }) {
     return [
       {
         name: "Overview",
-        href: "/",
+        href: "/admin",
         isActive: segments.length === 0,
         icon: <LayoutDashboard width={18} />,
       },

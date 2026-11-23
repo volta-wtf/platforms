@@ -17,9 +17,46 @@ export default function middleware(req: NextRequest) {
   }
 
   if (hostname.includes("app.")) {
+    const appPath =
+      pathname === "/admin"
+        ? "/app"
+        : pathname.startsWith("/admin/")
+          ? `/app${pathname.slice("/admin".length)}`
+          : `/app${pathname}`;
+
     return NextResponse.rewrite(
-      new URL(`/app${pathname}`, req.url),
+      new URL(appPath, req.url),
     );
+  }
+
+  const isRootDomain =
+    hostname === "localhost:3000" ||
+    hostname === process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+
+  if (isRootDomain) {
+    if (pathname === "/app" || pathname.startsWith("/app/")) {
+      return NextResponse.next();
+    }
+
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      const appPath =
+        pathname === "/admin"
+          ? "/app"
+          : `/app${pathname.slice("/admin".length)}`;
+      return NextResponse.rewrite(new URL(appPath, req.url));
+    }
+
+    const appRoutes = new Set([
+      "login",
+      "sites",
+      "settings",
+      "site",
+      "post",
+    ]);
+    const firstPathSegment = pathname.split("/")[1];
+    if (appRoutes.has(firstPathSegment)) {
+      return NextResponse.rewrite(new URL(`/app${pathname}`, req.url));
+    }
   }
 
   if (hostname === "localhost:3000") {

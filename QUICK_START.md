@@ -8,20 +8,19 @@
 
 ## 🔧 Pasos inmediatos para completar:
 
-### 1. Configurar GitHub OAuth (2 minutos)
+### 1. Configurar inicio de sesión con GitHub
 ```bash
 # Abre en tu navegador:
-https://github.com/settings/applications/new
+https://github.com/settings/apps
 ```
 
-**Configuración:**
-- Application name: `Tu App de Blogs`
-- Homepage URL: `http://localhost:3000`
-- Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
+En la configuración de autorización de usuario del GitHub App, habilita OAuth y agrega ambos Callback URLs:
+
+- Desarrollo: `http://localhost:3000/api/auth/callback/github`
+- Producción: `https://platforms-volta.vercel.app/api/auth/callback/github`
 
 **Después:**
-1. Copia el `Client ID` y `Client Secret`
-2. Edita `.env.local` y pega los valores en `AUTH_GITHUB_ID` y `AUTH_GITHUB_SECRET`
+1. Copia el `Client ID` y el `Client Secret` en `.env.local` como `AUTH_GITHUB_ID` y `AUTH_GITHUB_SECRET`.
 
 ### 2. Configurar servicios de Vercel (5 minutos)
 ```bash
@@ -64,7 +63,7 @@ pnpm dev
 ```
 
 ### 5. Verificar que funciona
-- **Dashboard**: http://app.localhost:3000
+- **Admin**: http://localhost:3000/admin
 - **Página principal**: http://localhost:3000
 - **Prueba crear una cuenta** con GitHub
 
@@ -85,8 +84,8 @@ vercel --prod
 Cuando hagas el deploy, agrega estas variables en Vercel Dashboard → Settings → Environment Variables:
 
 ```
-NEXTAUTH_URL=https://tu-dominio.vercel.app
-NEXT_PUBLIC_ROOT_DOMAIN=tu-dominio.vercel.app
+NEXTAUTH_URL=https://platforms-volta.vercel.app
+NEXT_PUBLIC_ROOT_DOMAIN=platforms-volta.vercel.app
 NEXT_PUBLIC_VERCEL_ENV=production
 AUTH_GITHUB_ID=tu_github_client_id
 AUTH_GITHUB_SECRET=tu_github_client_secret
@@ -100,7 +99,7 @@ OPENAI_API_KEY=sk-... (opcional)
 ## 🆘 ¿Problemas?
 
 1. **Error de base de datos**: Verifica que `POSTGRES_URL` esté en `.env.local`
-2. **Error de auth**: Verifica GitHub OAuth settings
+2. **Error de auth**: Verifica que el GitHub App tenga callbacks registrados para desarrollo y producción
 3. **Error de upload**: Verifica `BLOB_READ_WRITE_TOKEN`
 
 **¡Tu plataforma estará lista en menos de 10 minutos!** 🎉

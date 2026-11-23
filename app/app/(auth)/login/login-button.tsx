@@ -23,7 +23,11 @@ export default function LoginButton() {
       disabled={loading}
       onClick={() => {
         setLoading(true);
-        signIn("github");
+        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN;
+        const callbackUrl = rootDomain
+          ? `${window.location.protocol}//${rootDomain}/admin`
+          : `${window.location.origin}/admin`;
+        signIn("github", { callbackUrl });
       }}
       className={`${
         loading
