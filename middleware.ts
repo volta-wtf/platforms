@@ -4,7 +4,7 @@ import { NextResponse } from "next/dist/server/web/spec-extension/response";
 
 export const config = {
   matcher: [
-    "/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)",
+    "/((?!api/|_next/|_static/|_vercel|.*\\.[\\w]+$).*)",
   ],
 };
 

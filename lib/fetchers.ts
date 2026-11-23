@@ -12,7 +12,7 @@ export async function getSiteData(domain: string) {
 
   return await unstable_cache(
     async () => {
-      return await db.query.sites.findFirst({
+      const site = await db.query.sites.findFirst({
         where: subdomain
           ? eq(sites.subdomain, subdomain)
           : eq(sites.customDomain, domain),
@@ -20,8 +20,10 @@ export async function getSiteData(domain: string) {
           user: true,
         },
       });
+      // Cache a JSON-safe value for missing sites instead of `undefined`.
+      return site ?? null;
     },
-    [`${domain}-metadata`],
+    [`${domain}-metadata-v2`],
     {
       revalidate: 900,
       tags: [`${domain}-metadata`],
@@ -57,7 +59,7 @@ export async function getPostsForSite(domain: string) {
         )
         .orderBy(desc(posts.createdAt));
     },
-    [`${domain}-posts`],
+    [`${domain}-posts-v2`],
     {
       revalidate: 900,
       tags: [`${domain}-posts`],
@@ -136,7 +138,7 @@ export async function getPostData(domain: string, slug: string) {
         adjacentPosts,
       };
     },
-    [`${domain}-${slug}`],
+    [`${domain}-${slug}-v2`],
     {
       revalidate: 900, // 15 minutes
       tags: [`${domain}-${slug}`],
