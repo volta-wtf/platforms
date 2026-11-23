@@ -6,6 +6,7 @@ INSERT INTO "sites" (
   "description",
   "logo",
   "image",
+  "userId",
   "subdomain",
   "customDomain",
   "createdAt",
@@ -17,6 +18,7 @@ VALUES (
   'Un sitio de muestra publicado con Platforms.',
   '/logo.png',
   '/demo/platforms-cover.svg',
+  (SELECT "id" FROM "users" WHERE "gh_username" = 'cristianferrarig' ORDER BY "createdAt" DESC LIMIT 1),
   'demo',
   'platforms-volta.vercel.app',
   now(),
@@ -24,6 +26,7 @@ VALUES (
 )
 ON CONFLICT ("id") DO UPDATE
 SET
+  "userId" = COALESCE("sites"."userId", EXCLUDED."userId"),
   "image" = CASE
     WHEN "sites"."image" IS NULL OR "sites"."image" = '/placeholder.png'
       THEN EXCLUDED."image"
@@ -43,6 +46,7 @@ INSERT INTO "posts" (
   "slug",
   "published",
   "image",
+  "userId",
   "siteId",
   "createdAt",
   "updatedAt"
@@ -55,13 +59,16 @@ VALUES (
   'bienvenido-a-platforms',
   true,
   '/demo/welcome-cover.svg',
+  (SELECT "userId" FROM "sites" WHERE "id" = 'demo-site-volta'),
   'demo-site-volta',
   now(),
   now()
 )
 ON CONFLICT ("id") DO UPDATE
-SET "image" = CASE
-  WHEN "posts"."image" IS NULL OR "posts"."image" = '/placeholder.png'
-    THEN EXCLUDED."image"
-  ELSE "posts"."image"
-END;
+SET
+  "userId" = COALESCE("posts"."userId", EXCLUDED."userId"),
+  "image" = CASE
+    WHEN "posts"."image" IS NULL OR "posts"."image" = '/placeholder.png'
+      THEN EXCLUDED."image"
+    ELSE "posts"."image"
+  END;
