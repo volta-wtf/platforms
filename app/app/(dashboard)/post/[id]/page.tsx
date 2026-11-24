@@ -2,6 +2,7 @@ import { getSession } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import Editor from "@/components/editor";
 import db from "@/lib/db";
+import { normalizePostContent } from "@/lib/post-content";
 
 export default async function PostPage({ params }: { params: { id: string } }) {
   const session = await getSession();
@@ -23,5 +24,7 @@ export default async function PostPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
-  return <Editor post={data} />;
+  return (
+    <Editor post={{ ...data, content: normalizePostContent(data.content) }} />
+  );
 }

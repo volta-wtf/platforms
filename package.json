@@ -36,6 +36,7 @@
     "next": "14.0.2",
     "next-auth": "^4.24.7",
     "next-mdx-remote": "^6.0.0",
+    "node-html-markdown": "^1.3.0",
     "novel": "0.1.22",
     "openai-edge": "^1.2.2",
     "postgres": "^3.4.7",

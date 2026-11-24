@@ -117,11 +117,11 @@ export default function Editor({ post }: { post: PostWithSite }) {
           defaultValue={post?.content || ""}
           disableLocalStorage
           onUpdate={(editor) => {
-            const content = editor?.getHTML() || "";
+            const content = editor?.storage.markdown.getMarkdown() || "";
             setData((prev) => ({ ...prev, content }));
           }}
           onDebouncedUpdate={(editor) => {
-            const content = editor?.getHTML() || "";
+            const content = editor?.storage.markdown.getMarkdown() || "";
             if (content !== post?.content) {
               startTransitionSaving(async () => {
                 await updatePost({ ...data, content });

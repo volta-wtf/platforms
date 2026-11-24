@@ -4,6 +4,7 @@ import { and, desc, eq, not } from "drizzle-orm";
 import { posts, sites, users } from "./schema";
 import { serialize } from "next-mdx-remote/serialize";
 import { replaceExamples, replaceTweets } from "@/lib/remark-plugins";
+import { normalizePostContent } from "@/lib/post-content";
 
 export async function getSiteData(domain: string) {
   const subdomain = domain.endsWith(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`)
@@ -138,7 +139,7 @@ export async function getPostData(domain: string, slug: string) {
         adjacentPosts,
       };
     },
-    [`${domain}-${slug}-v2`],
+    [`${domain}-${slug}-v3`],
     {
       revalidate: 900, // 15 minutes
       tags: [`${domain}-${slug}`],
@@ -149,8 +150,10 @@ export async function getPostData(domain: string, slug: string) {
 async function getMdxSource(postContents: string) {
   // transforms links like <link> to [link](link) as MDX doesn't support <link> syntax
   // https://mdxjs.com/docs/what-is-mdx/#markdown
-  const content =
-    postContents?.replaceAll(/<(https?:\/\/\S+)>/g, "[$1]($1)") ?? "";
+  const content = normalizePostContent(postContents).replaceAll(
+    /<(https?:\/\/\S+)>/g,
+    "[$1]($1)",
+  );
   // Serialize the content string into MDX
   const mdxSource = await serialize(content, {
     mdxOptions: {
