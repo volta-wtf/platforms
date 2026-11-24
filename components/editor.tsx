@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { updatePost, updatePostMetadata } from "@/lib/actions";
+// Novel 0.1.22 imports __serializeForClipboard, removed from prosemirror-view's
+// package exports in 1.38. Keep the 1.37.2 override in package.json.
+import { Editor as NovelEditor } from "novel";
 import TextareaAutosize from "react-textarea-autosize";
 import { cn } from "@/lib/utils";
 import LoadingDots from "./icons/loading-dots";
@@ -109,20 +112,24 @@ export default function Editor({ post }: { post: PostWithSite }) {
       </div>
 
       {hydrated && (
-        <div className="relative min-h-[500px] w-full">
-          <TextareaAutosize
-            placeholder="Write your content here..."
-            defaultValue={post?.content || ""}
-            onChange={(e) => setData({ ...data, content: e.target.value })}
-            className="dark:placeholder-text-600 w-full resize-none border-none px-0 text-lg placeholder:text-stone-400 focus:outline-none focus:ring-0 dark:bg-black dark:text-white"
-            minRows={20}
-          />
-          <div className="mt-4 rounded-lg bg-blue-50 border border-blue-200 p-4">
-            <p className="text-blue-800 text-sm">
-              💡 Editor simplificado para máxima compatibilidad. Soporta Markdown básico.
-            </p>
-          </div>
-        </div>
+        <NovelEditor
+          className="relative min-h-[500px] w-full max-w-screen-lg bg-white sm:mb-[calc(20vh)] sm:rounded-lg sm:border sm:border-stone-200 sm:shadow-lg"
+          defaultValue={post?.content || ""}
+          disableLocalStorage
+          onUpdate={(editor) => {
+            const content = editor?.getHTML() || "";
+            setData((prev) => ({ ...prev, content }));
+          }}
+          onDebouncedUpdate={(editor) => {
+            const content = editor?.getHTML() || "";
+            if (content !== post?.content) {
+              startTransitionSaving(async () => {
+                await updatePost({ ...data, content });
+              });
+            }
+          }}
+          completionApi="/api/generate"
+        />
       )}
     </div>
   );
