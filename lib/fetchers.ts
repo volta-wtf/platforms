@@ -139,7 +139,7 @@ export async function getPostData(domain: string, slug: string) {
         adjacentPosts,
       };
     },
-    [`${domain}-${slug}-v3`],
+    [`${domain}-${slug}-v4`],
     {
       revalidate: 900, // 15 minutes
       tags: [`${domain}-${slug}`],
